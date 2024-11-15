@@ -1,0 +1,38 @@
+import basic.osc
+
+scenario top:
+    path: Path                 
+    path.set_map("Town04")
+    path.path_min_driving_lanes(2)
+
+    ego_vehicle: Model3                 # ego car
+    npc: Model3                        # The slow car
+
+    event start
+    event end
+    do serial(duration: 60s):
+        parallel:
+            serial:
+                slow: parallel(duration: 15s):
+                    npc.drive(path) with:
+                        speed(32kph) #swipes from range of [10kph..55kph]
+                        lane(2, at: start) # left to right: [1..n]  
+
+            serial:
+                drive: parallel(duration: 10s):
+                    ego_vehicle.drive(path) with:
+                        #speed(33kph)
+                        lane(left_of: npc, at: start)
+                        position(20m, behind: npc, at: start)
+                        position(5m, behind: npc, at: end) 
+
+                change_lane: parallel(duration: 5s):
+                    ego_vehicle.drive(path) with:
+                        lane(same_as: npc, at: end)
+
+        serial:
+            stop: parallel(duration: 10s):
+                npc.drive(path) with:
+                    speed(0kph)
+                ego_vehicle.drive(path) with:
+                    speed(0kph)
