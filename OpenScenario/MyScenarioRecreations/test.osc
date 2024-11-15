@@ -1,0 +1,40 @@
+import basic.osc
+#import standard.osc
+
+#type acceleration is SI(m: 1, s: -2)
+#unit kphps               of acceleration is SI(m: 1, s: -1, factor: 0.277777778)
+
+scenario top:
+    path: Path                      # A path in the map
+    path.set_map("Town04")    # specify map to use in this test
+    path.path_min_driving_lanes(2)         # Path should have at least two lanes
+
+    ego_vehicle: Model3                # ego car
+    npc: Rubicon               # The other car
+
+    event start
+    event end
+
+    do serial:
+
+
+        get_ahead: parallel(duration: 15s):
+            ego_vehicle.drive(path) with:
+                speed(30kph)
+                lane(1, at: start) # left to right: [1..n]
+            npc.drive(path) with:
+                lane(right_of: ego_vehicle, at: start)
+                position(15m, behind: ego_vehicle, at: start)
+                position(30m, ahead_of: ego_vehicle, at: end)       
+
+
+
+        ego_stop: parallel(duration: 15s):
+            ego_vehicle.drive(path) with:
+                #acceleration(1kmphps, at: start)
+                speed([0kph..30kph], at: start)
+                #lane(right_of: npc, at: start)
+                #position([0m..50m], behind: npc, at: end)
+                #speed(150kph)
+            npc.drive(path) with:
+                speed(0kph, at: start)
